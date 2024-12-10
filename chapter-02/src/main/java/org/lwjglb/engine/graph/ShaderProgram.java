@@ -23,23 +23,31 @@ import static org.lwjgl.opengl.GL20.glValidateProgram;
 import org.lwjgl.opengl.GL30;
 import org.lwjglb.engine.Utils;
 
-//The constructor of the ShaderProgram receives a list of ShaderModuleData instances which define the shader module type (vertex, fragment, etc.) and the path to the source file which contains the shader module code. The constructor starts by creating a new OpenGL shader program by compiling firs each shader module (by invoking the createShader method) and finally linking all together (by invoking the link method). Once the shader program has been linked, the compiled vertex and fragment shaders can be freed up (by calling glDetachShader).
-
 public class ShaderProgram {
 
     private final int programId;
 
     public ShaderProgram(List<ShaderModuleData> shaderModuleDataList) {
-        //get list of ShaderModuleData which defines shader type(vertex, fragment, etc)
         programId = glCreateProgram();
         if (programId == 0) {
             throw new RuntimeException("Could not create Shader");
         }
 
         List<Integer> shaderModules = new ArrayList<>();
-        shaderModuleDataList.forEach(s     -> shaderModules.add(createShader(Utils.readFile(s.shaderFile), s.shaderType)));
+        shaderModuleDataList.forEach(s -> shaderModules.add(createShader(Utils.readFile(s.shaderFile), s.shaderType)));
 
         link(shaderModules);
+    }
+
+    public void bind() {
+        glUseProgram(programId);
+    }
+
+    public void cleanup() {
+        unbind();
+        if (programId != 0) {
+            glDeleteProgram(programId);
+        }
     }
 
     protected int createShader(String shaderCode, int shaderType) {
@@ -60,21 +68,6 @@ public class ShaderProgram {
         return shaderId;
     }
 
-    public void bind() {
-        glUseProgram(programId);
-    }
-
-    public void unbind() {
-        glUseProgram(0);
-    }
-
-    public void cleanup() {
-        unbind();
-        if (programId != 0) {
-            glDeleteProgram(programId);
-        }
-    }
-
     public int getProgramId() {
         return programId;
     }
@@ -89,8 +82,11 @@ public class ShaderProgram {
         shaderModules.forEach(GL30::glDeleteShader);
     }
 
+    public void unbind() {
+        glUseProgram(0);
+    }
+
     public void validate() {
-        //mainly for debugging/error management problems
         glValidateProgram(programId);
         if (glGetProgrami(programId, GL_VALIDATE_STATUS) == 0) {
             throw new RuntimeException("Error validating Shader code: " + glGetProgramInfoLog(programId, 1024));

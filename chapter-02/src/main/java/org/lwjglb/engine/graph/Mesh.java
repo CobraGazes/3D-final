@@ -1,11 +1,13 @@
 package org.lwjglb.engine.graph;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
+import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_STATIC_DRAW;
 import static org.lwjgl.opengl.GL15.glBindBuffer;
 import static org.lwjgl.opengl.GL15.glBufferData;
@@ -23,51 +25,59 @@ public class Mesh {
     private int numVertices;
     private int vaoId;
     private List<Integer> vboIdList;
-    
-    public int getNumVertices() {
-        return numVertices;
-    }
 
-    public final int getVaoId() {
-        return vaoId;
-    }
 
-    private int VaoHandle(){
-        vaoId = glGenVertexArrays(); //gather an array of vertex "names"  
-        glBindVertexArray(vaoId); // ^ bind it, more info > https://stackoverflow.com/questions/26552642/when-is-what-bound-to-a-vao
-        return vaoId;
-    }
-
-    private FloatBuffer BufferFinish(int vboId, FloatBuffer positionsBuffer){
-        glBindBuffer(GL_ARRAY_BUFFER, vboId);
-        glBufferData(GL_ARRAY_BUFFER, positionsBuffer, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
-        return positionsBuffer;
-    }
-
-    public Mesh(float[] positions, int numVertices) {
+    public Mesh(float[] positions, float[] colors, int[] indices) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
-            this.numVertices = numVertices;
+            numVertices = indices.length;
             vboIdList = new ArrayList<>();
 
-            VaoHandle();
+            vaoId = glGenVertexArrays();
+            glBindVertexArray(vaoId);
 
-            // create vbo (actual list of vertices used for rendering)
+            // Positions VBO
             int vboId = glGenBuffers();
             vboIdList.add(vboId);
-            FloatBuffer positionsBuffer = stack.callocFloat(positions.length); //converting to use for C since opengl is C based.
+            FloatBuffer positionsBuffer = stack.callocFloat(positions.length);
             positionsBuffer.put(0, positions);
-            //details here: https://blog.lwjgl.org/memory-management-in-lwjgl-3/.
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            glBufferData(GL_ARRAY_BUFFER, positionsBuffer, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
 
-            BufferFinish(vboId, positionsBuffer);
+            // Color VBO
+            vboId = glGenBuffers();
+            vboIdList.add(vboId);
+            FloatBuffer colorsBuffer = stack.callocFloat(colors.length);
+            colorsBuffer.put(0, colors);
+            glBindBuffer(GL_ARRAY_BUFFER, vboId);
+            glBufferData(GL_ARRAY_BUFFER, colorsBuffer, GL_STATIC_DRAW);
+            glEnableVertexAttribArray(1);
+            glVertexAttribPointer(1, 3, GL_FLOAT, false, 0, 0);
+
+            // Index VBO
+            vboId = glGenBuffers();
+            vboIdList.add(vboId);
+            IntBuffer indicesBuffer = stack.callocInt(indices.length);
+            indicesBuffer.put(0, indices);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboId);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBuffer, GL_STATIC_DRAW);
+
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
         }
     }
 
     public void cleanup() {
         vboIdList.forEach(GL30::glDeleteBuffers);
         glDeleteVertexArrays(vaoId);
+    }
+
+    public int getNumVertices() {
+        return numVertices;
+    }
+
+    public final int getVaoId() {
+        return vaoId;
     }
 }

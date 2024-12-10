@@ -12,7 +12,6 @@ public class Utils {
 
     public static String readFile(String filePath) {
         String str;
-        System.out.println("sd");
         try {
             str = new String(Files.readAllBytes(Paths.get(filePath)));
         } catch (IOException excp) {

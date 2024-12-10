@@ -26,13 +26,22 @@ public class Main implements IAppLogic {
     public void init(Window window, Scene scene, Render render) {
         //define an array of floats that contain the coordinates of the vertices of a triangle
         float[] positions = new float[]{
-            0.0f, 0.5f, 0.0f,
-            -0.5f, -0.5f, 0.0f,
-            -0.6f, 0.3f, 0.0f,
-            0.5f, -0.5f, 0.0f //rn this just puts the triangle vertices down with hardcode but chanage later
+            -0.5f, 0.5f, -2.0f,
+            -0.5f, -0.5f, -1.0f,
+            0.5f, -0.5f, -1.0f,
+            0.5f, 0.5f, -1.0f,
         };
-        Mesh mesh = new Mesh(positions, 3);
-        scene.addMesh("triangle", mesh);
+        float[] colors = new float[]{
+                0.5f, 0.0f, 0.0f,
+                1.0f, 0.5f, 0.0f,
+                0.0f, 0.0f, 0.5f,
+                0.0f, 0.5f, 0.5f,
+        };
+        int[] indices = new int[]{
+                0, 1, 3, 3, 1, 2
+        };
+        Mesh mesh = new Mesh(positions, colors, indices);
+        scene.addMesh("quad", mesh);
     }
 
     @Override
