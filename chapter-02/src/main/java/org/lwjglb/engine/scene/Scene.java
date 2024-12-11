@@ -4,14 +4,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.lwjglb.engine.graph.Mesh;
+import org.lwjglb.engine.graph.Model;
 
 public class Scene {
 
     private Map<String, Mesh> meshMap;
     private Projection projection;
+    private Map<String, Model> modelMap;
+    private String ModelID;
 
     public Scene(int width, int height) {
         meshMap = new HashMap<>();
+        modelMap = new HashMap<>();
         projection = new Projection(width, height);
     }
     
@@ -23,8 +27,29 @@ public class Scene {
         meshMap.put(meshId, mesh);
     }
 
-    public void cleanup() {
+    public void addEntity(Entity entity){
+        ModelID = entity.returnModelID();
+        Model model = modelMap.get(ModelID);
+        if (model == null){
+            throw new RuntimeException("cant find model "+ model);
+        }
+        model.getEntitiesList().add(entity);
+    }
+
+    public void addModel(Model model){
+        modelMap.put(model.getId(), model);
+    }
+
+    public void cleanupMesh() {
         meshMap.values().forEach(Mesh::cleanup);
+    }
+
+    public void cleanupModel() {
+        modelMap.values().forEach(Model::cleanup);
+    }
+
+    public Map<String, Model> returnModelMap() {
+        return modelMap;
     }
 
     public Projection getProjection() {
