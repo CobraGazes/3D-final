@@ -7,6 +7,7 @@ import java.util.List;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_C;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
@@ -14,6 +15,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_Q;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_Z;
 import org.lwjglb.engine.Engine;
 import org.lwjglb.engine.IAppLogic;
 import org.lwjglb.engine.Window;
@@ -117,6 +119,11 @@ public class Main implements IAppLogic {
             displInc.z = -1;
         } else if (window.isKeyPressed(GLFW_KEY_DOWN)) {
             displInc.z = 1;
+        }
+        if (window.isKeyPressed(GLFW_KEY_Z)) {
+            displInc.w = -1;
+        } else if (window.isKeyPressed(GLFW_KEY_C)) {
+            displInc.w = 1;
         }
         if (window.isKeyPressed(GLFW_KEY_E)) {
             rotation -= 1.0;
