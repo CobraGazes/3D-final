@@ -5,9 +5,11 @@ import java.util.Map;
 
 import org.lwjglb.engine.graph.Mesh;
 import org.lwjglb.engine.graph.Model;
+import org.lwjglb.engine.graph.TextureCache;
 
 public class Scene {
 
+    private TextureCache textureCache;
     private Map<String, Mesh> meshMap;
     private Projection projection;
     private Map<String, Model> modelMap;
@@ -17,11 +19,9 @@ public class Scene {
         meshMap = new HashMap<>();
         modelMap = new HashMap<>();
         projection = new Projection(width, height);
+        textureCache = new TextureCache();
     }
-    
-    public Map<String, Mesh> getMeshMap() {
-        return meshMap;
-    }
+
 
     public void addMesh(String meshId, Mesh mesh) {
         meshMap.put(meshId, mesh);
@@ -54,6 +54,14 @@ public class Scene {
 
     public Projection getProjection() {
         return projection;
+    }
+
+    public Map<String, Mesh> getMeshMap() {
+        return meshMap;
+    }
+
+    public TextureCache getTextureCache(){
+        return textureCache;
     }
 
     public void changesize(int width, int height){

@@ -39,7 +39,8 @@ public class Engine {
         scene.changesize(window.getWidth(), window.getHeight());
     }
 
-    private void run() {
+    public void run() {
+        running = true;
         long initialTime = System.currentTimeMillis();
         //log time on startup
         float timeU = 1000.0f / targetUps;
@@ -78,10 +79,10 @@ public class Engine {
         cleanup();
     }
 
-    public void start() {
-        running = true;
-        run();
-    }
+    // public void start() {
+    //     running = true;
+    //     run();
+    // }
 
     public void stop() {
         running = false;
