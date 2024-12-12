@@ -9,6 +9,7 @@ import org.lwjglb.engine.graph.TextureCache;
 
 public class Scene {
 
+    private Camera camera;
     private TextureCache textureCache;
     private Map<String, Mesh> meshMap;
     private Projection projection;
@@ -20,6 +21,11 @@ public class Scene {
         modelMap = new HashMap<>();
         projection = new Projection(width, height);
         textureCache = new TextureCache();
+        camera = new Camera();
+    }
+
+    public Camera getCamera() {
+        return camera;
     }
 
 

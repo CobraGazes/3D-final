@@ -58,6 +58,7 @@ public class Engine {
             deltaFps += (now - initialTime) / timeR;
 
             if (targetFps <= 0 || deltaFps >= 1) {
+                window.getMouseInput().input();
                 appLogic.input(window, scene, now - initialTime);
             }
 
@@ -79,10 +80,6 @@ public class Engine {
         cleanup();
     }
 
-    // public void start() {
-    //     running = true;
-    //     run();
-    // }
 
     public void stop() {
         running = false;

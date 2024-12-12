@@ -4,26 +4,29 @@ package org.lwjglb.game;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.joml.Vector3f;
+import org.joml.Vector2f;
 import org.joml.Vector4f;
+import static org.lwjgl.glfw.GLFW.GLFW_CURSOR;
+import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_C;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_E;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_Q;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_Z;
+import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
 import org.lwjglb.engine.Engine;
 import org.lwjglb.engine.IAppLogic;
+import org.lwjglb.engine.MouseInput;
 import org.lwjglb.engine.Window;
 import org.lwjglb.engine.graph.Material;
 import org.lwjglb.engine.graph.Mesh;
 import org.lwjglb.engine.graph.Model;
 import org.lwjglb.engine.graph.Render;
 import org.lwjglb.engine.graph.Texture;
+import org.lwjglb.engine.scene.Camera;
 import org.lwjglb.engine.scene.Entity;
 import org.lwjglb.engine.scene.Scene;
 
@@ -34,6 +37,8 @@ public class Main implements IAppLogic {
     private Entity cubeEntity;
     private Vector4f displInc = new Vector4f();
     private float rotation;
+    private static final float MOUSE_SENSITIVITY = 0.1f;
+    private static final float MOVEMENT_SPEED = 0.005f;
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -48,7 +53,8 @@ public class Main implements IAppLogic {
 
     @Override
     public void init(Window window, Scene scene, Render render) {
-        float[] positions = new float[]{
+        glfwSetInputMode(window.getWindowHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        float[] positions = new float[]{    
             // V0
             -0.5f, 0.5f, 0.5f,
             // V1
@@ -162,45 +168,29 @@ public class Main implements IAppLogic {
 
     @Override
     public void input(Window window, Scene scene, long diffTimeMillis) {
-        displInc.zero();
+        float move = diffTimeMillis * MOVEMENT_SPEED;
+        Camera camera = scene.getCamera();
         if (window.isKeyPressed(GLFW_KEY_W)) {
-            displInc.y = 1;
+            camera.CamForward(move);
         } else if (window.isKeyPressed(GLFW_KEY_S)) {
-            displInc.y = -1;
+            camera.CamBackwards(move);
         }
-        if (window.isKeyPressed(GLFW_KEY_A)) {
-            displInc.x = -1;
-        } else if (window.isKeyPressed(GLFW_KEY_D)) {
-            displInc.x = 1;
+        if (window.isKeyPressed(GLFW_KEY_A )|| window.isKeyPressed(GLFW_KEY_LEFT)) {
+            camera.CamLeft(move);
+        } else if (window.isKeyPressed(GLFW_KEY_D) || window.isKeyPressed(GLFW_KEY_RIGHT)) {
+            camera.CamRight(move);
         }
         if (window.isKeyPressed(GLFW_KEY_UP)) {
-            displInc.z = -1;
+            camera.CamUp(move);
         } else if (window.isKeyPressed(GLFW_KEY_DOWN)) {
-            displInc.z = 1;
-        }
-        if (window.isKeyPressed(GLFW_KEY_Z)) {
-            displInc.w = -1;
-        } else if (window.isKeyPressed(GLFW_KEY_C)) {
-            displInc.w = 1;
-        }
-        if (window.isKeyPressed(GLFW_KEY_E)) {
-            rotation -= 1.0;
-            if (rotation > 360) {
-                rotation = 0;
-            }
-        } else if (window.isKeyPressed(GLFW_KEY_Q)) {
-            rotation += 1.0;
-            if (rotation > 360) {
-                rotation = 0;
-            }
+            camera.CamDown(move);
         }
 
-        displInc.mul(diffTimeMillis / 1000.0f);
-
-        Vector3f entityPos = cubeEntity.returnPosition();
-        cubeEntity.setPosition(displInc.x + entityPos.x, displInc.y + entityPos.y, displInc.z + entityPos.z);
-        cubeEntity.setScale(cubeEntity.returnScale() + displInc.w);
-        cubeEntity.updateModelMatrix();
+        MouseInput mouseInput = window.getMouseInput();
+        //if (mouseInput.isRightButtonPressed()) {
+            Vector2f displVec = mouseInput.getDisplVec();
+            camera.addRotation((float) Math.toRadians(displVec.x * MOUSE_SENSITIVITY), (float) Math.toRadians(displVec.y * MOUSE_SENSITIVITY));
+        //}
     }
 
     @Override
