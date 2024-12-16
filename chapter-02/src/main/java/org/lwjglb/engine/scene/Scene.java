@@ -3,12 +3,14 @@ package org.lwjglb.engine.scene;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.lwjglb.engine.IGuiInstance;
 import org.lwjglb.engine.graph.Mesh;
 import org.lwjglb.engine.graph.Model;
 import org.lwjglb.engine.graph.TextureCache;
 
 public class Scene {
 
+    private IGuiInstance guiInstance;
     private Camera camera;
     private TextureCache textureCache;
     private Map<String, Mesh> meshMap;
@@ -73,4 +75,13 @@ public class Scene {
     public void changesize(int width, int height){
         projection.updateMatrix(width, height);
     }
+
+    public void setGuiInstance(IGuiInstance guiInstance){
+        this.guiInstance = guiInstance;
+    }
+
+    public IGuiInstance getGuiInstance() {
+        return guiInstance;
+    }
+
 }

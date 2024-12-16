@@ -1,40 +1,40 @@
 package org.lwjglb.game;
 
-    
-import java.util.ArrayList;
-import java.util.List;
-
 import org.joml.Vector2f;
 import org.joml.Vector4f;
 import static org.lwjgl.glfw.GLFW.GLFW_CURSOR;
 import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_UP;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
 import org.lwjglb.engine.Engine;
 import org.lwjglb.engine.IAppLogic;
+import org.lwjglb.engine.IGuiInstance;
 import org.lwjglb.engine.MouseInput;
 import org.lwjglb.engine.Window;
-import org.lwjglb.engine.graph.Material;
-import org.lwjglb.engine.graph.Mesh;
 import org.lwjglb.engine.graph.Model;
 import org.lwjglb.engine.graph.Render;
-import org.lwjglb.engine.graph.Texture;
 import org.lwjglb.engine.scene.Camera;
 import org.lwjglb.engine.scene.Entity;
+import org.lwjglb.engine.scene.ModelLoader;
 import org.lwjglb.engine.scene.Scene;
 
+import imgui.ImGui;
+import imgui.ImGuiIO;
+import imgui.flag.ImGuiCond;
 
 
-public class Main implements IAppLogic {
+
+public class Main implements IAppLogic, IGuiInstance {
 
     private Entity cubeEntity;
+    private Entity rbEntity;
     private Vector4f displInc = new Vector4f();
     private float rotation;
     private static final float MOUSE_SENSITIVITY = 0.1f;
@@ -47,6 +47,27 @@ public class Main implements IAppLogic {
     }
 
     @Override
+    public boolean handleGuiInput(Scene scene, Window window) {
+        ImGuiIO imGuiIO = ImGui.getIO();
+        MouseInput mouseInput = window.getMouseInput();
+        Vector2f mousePos = mouseInput.getCurrentPos();
+        imGuiIO.addMousePosEvent(mousePos.x, mousePos.y);
+        imGuiIO.addMouseButtonEvent(0, mouseInput.isLeftButtonPressed());
+        imGuiIO.addMouseButtonEvent(1, mouseInput.isRightButtonPressed());
+
+        return imGuiIO.getWantCaptureMouse() || imGuiIO.getWantCaptureKeyboard();
+    }
+
+    @Override
+    public void drawGui(){
+        ImGui.newFrame();
+        ImGui.setNextWindowPos(0, 0, ImGuiCond.Always);
+        ImGui.showDemoWindow();
+        ImGui.endFrame();
+        ImGui.render();    
+    }
+
+    @Override
     public void cleanup() {
         // Nothing to be done yet
     }
@@ -54,120 +75,27 @@ public class Main implements IAppLogic {
     @Override
     public void init(Window window, Scene scene, Render render) {
         glfwSetInputMode(window.getWindowHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        float[] positions = new float[]{    
-            // V0
-            -0.5f, 0.5f, 0.5f,
-            // V1
-            -0.5f, -0.5f, 0.5f,
-            // V2
-            0.5f, -0.5f, 0.5f,
-            // V3
-            0.5f, 0.5f, 0.5f,
-            // V4
-            -0.5f, 0.5f, -0.5f,
-            // V5
-            0.5f, 0.5f, -0.5f,
-            // V6
-            -0.5f, -0.5f, -0.5f,
-            // V7
-            0.5f, -0.5f, -0.5f,
 
-            // For text coords in top face
-            // V8: V4 repeated
-            -0.5f, 0.5f, -0.5f,
-            // V9: V5 repeated
-            0.5f, 0.5f, -0.5f,
-            // V10: V0 repeated
-            -0.5f, 0.5f, 0.5f,
-            // V11: V3 repeated
-            0.5f, 0.5f, 0.5f,
-
-            // For text coords in right face
-            // V12: V3 repeated
-            0.5f, 0.5f, 0.5f,
-            // V13: V2 repeated
-            0.5f, -0.5f, 0.5f,
-
-            // For text coords in left face
-            // V14: V0 repeated
-            -0.5f, 0.5f, 0.5f,
-            // V15: V1 repeated
-            -0.5f, -0.5f, 0.5f,
-
-            // For text coords in bottom face
-            // V16: V6 repeated
-            -0.5f, -0.5f, -0.5f,
-            // V17: V7 repeated
-            0.5f, -0.5f, -0.5f,
-            // V18: V1 repeated
-            -0.5f, -0.5f, 0.5f,
-            // V19: V2 repeated
-            0.5f, -0.5f, 0.5f,
-        };
-        float[] textCoords = new float[]{
-            0.0f, 0.0f,
-            0.0f, 0.5f,
-            0.5f, 0.5f,
-            0.5f, 0.0f,
-
-            0.0f, 0.0f,
-            0.5f, 0.0f,
-            0.0f, 0.5f,
-            0.5f, 0.5f,
-
-            // For text coords in top face
-            0.0f, 0.5f,
-            0.5f, 0.5f,
-            0.0f, 1.0f,
-            0.5f, 1.0f,
-
-            // For text coords in right face
-            0.0f, 0.0f,
-            0.0f, 0.5f,
-
-            // For text coords in left face
-            0.5f, 0.0f,
-            0.5f, 0.5f,
-
-            // For text coords in bottom face
-            0.5f, 0.0f,
-            1.0f, 0.0f,
-            0.5f, 0.5f,
-            1.0f, 0.5f,
-        };
-        int[] indices = new int[]{
-            // Front face
-            0, 1, 3, 3, 1, 2,
-            // Top Face
-            8, 10, 11, 9, 8, 11,
-            // Right face
-            12, 13, 7, 5, 12, 7,
-            // Left face
-            14, 15, 6, 4, 14, 6,
-            // Bottom face
-            16, 18, 19, 17, 16, 19,
-            // Back face
-            4, 6, 7, 5, 4, 7,};
-        Texture texture = scene.getTextureCache().createTexture("chapter-02/resources/models/cube/cube.png");
-        Material material = new Material();
-        material.setTexturePath(texture.getTexturePath());
-        List<Material> materialList = new ArrayList<>();
-        materialList.add(material);
-
-        Mesh mesh = new Mesh(positions, textCoords, indices);
-        material.getMeshList().add(mesh);
-        Model cubeModel = new Model("cube-model", materialList);
-        scene.addModel(cubeModel);
+        //defines, loads and creates model specified (for loop through all files soon)
+        Model cubeModel = ModelLoader.loadModel("cube-model", "chapter-02/resources/models/cube/cube.obj", scene.getTextureCache()); scene.addModel(cubeModel);
+        Model rbModel = ModelLoader.loadModel("rb-model", "chapter-02/resources/models/rbmodel/rbmodel.obj", scene.getTextureCache()); scene.addModel(rbModel);
 
         cubeEntity = new Entity("cube-entity", cubeModel.getId());
-        cubeEntity.setPosition(0, 0, -2);
-        rotation = 56;
-        cubeEntity.setRotation(1, 1, 1, (float) Math.toRadians(rotation));
+        cubeEntity.setPosition(0, -1, -2);
         scene.addEntity(cubeEntity);
+
+        rbEntity = new Entity("rb-model", rbModel.getId());
+        rbEntity.setPosition(0, -1, -2);
+        scene.addEntity(rbEntity);
+
+        //scene.setGuiInstance(this);   uncomment when i do gui
     }
 
     @Override
-    public void input(Window window, Scene scene, long diffTimeMillis) {
+    public void input(Window window, Scene scene, long diffTimeMillis, boolean inputConsumed) {
+        if (inputConsumed) {
+            return;
+        }
         float move = diffTimeMillis * MOVEMENT_SPEED;
         Camera camera = scene.getCamera();
         if (window.isKeyPressed(GLFW_KEY_W)) {
@@ -180,16 +108,17 @@ public class Main implements IAppLogic {
         } else if (window.isKeyPressed(GLFW_KEY_D) || window.isKeyPressed(GLFW_KEY_RIGHT)) {
             camera.CamRight(move);
         }
-        if (window.isKeyPressed(GLFW_KEY_UP)) {
+        if (window.isKeyPressed(GLFW_KEY_SPACE)) {
             camera.CamUp(move);
-        } else if (window.isKeyPressed(GLFW_KEY_DOWN)) {
+        } else if (window.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
             camera.CamDown(move);
         }
 
         MouseInput mouseInput = window.getMouseInput();
-        //if (mouseInput.isRightButtonPressed()) {
+        //if (mouseInput.isLeftButtonPressed()) {
             Vector2f displVec = mouseInput.getDisplVec();
             camera.addRotation((float) Math.toRadians(displVec.x * MOUSE_SENSITIVITY), (float) Math.toRadians(displVec.y * MOUSE_SENSITIVITY));
+            //System.out.println(displVec.x + displVec.y);
         //}
     }
 
@@ -199,4 +128,9 @@ public class Main implements IAppLogic {
         cubeEntity.setRotation(1, 1, 1, (float) Math.toRadians(rotation));
         cubeEntity.updateModelMatrix();
     }
+
+    public void input(Window window, Scene scene, long diffTimeMillis) {
+        throw new UnsupportedOperationException("Unimplemented method 'input'");
+    }
+
 }

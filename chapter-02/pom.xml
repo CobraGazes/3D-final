@@ -13,7 +13,17 @@
     <artifactId>chapter-03</artifactId>
     <version>1.0</version>
 
-    <dependencies>
+        <dependencies>
+            <dependency>
+            <groupId>io.github.spair</groupId>
+            <artifactId>imgui-java-binding</artifactId>
+            <version>${imgui-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-assimp</artifactId>
+            <version>${lwjgl.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.tinylog</groupId>
             <artifactId>tinylog-api</artifactId>
@@ -66,8 +76,21 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
+            <groupId>io.github.spair</groupId>
+            <artifactId>imgui-java-${native.target}</artifactId>
+            <version>${imgui-java.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>org.lwjgl</groupId>
             <artifactId>lwjgl-opengl</artifactId>
+            <version>${lwjgl.version}</version>
+            <classifier>${native.target}</classifier>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.lwjgl</groupId>
+            <artifactId>lwjgl-assimp</artifactId>
             <version>${lwjgl.version}</version>
             <classifier>${native.target}</classifier>
             <scope>runtime</scope>
