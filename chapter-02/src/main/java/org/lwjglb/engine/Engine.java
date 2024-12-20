@@ -31,7 +31,7 @@ public class Engine {
     private void cleanup() {
         appLogic.cleanup();
         render.cleanup();
-        scene.cleanupMesh();
+        scene.cleanup();
         window.cleanup();
     }
 

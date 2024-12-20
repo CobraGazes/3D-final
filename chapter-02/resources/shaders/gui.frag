@@ -1,4 +1,4 @@
-#version 450
+#version 330
 
 in vec2 frgTextCoords;
 in vec4 frgColor;

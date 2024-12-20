@@ -4,35 +4,37 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.lwjglb.engine.IGuiInstance;
-import org.lwjglb.engine.graph.Mesh;
 import org.lwjglb.engine.graph.Model;
 import org.lwjglb.engine.graph.TextureCache;
+import org.lwjglb.engine.scene.lights.SceneLights;
 
 public class Scene {
 
     private IGuiInstance guiInstance;
     private Camera camera;
     private TextureCache textureCache;
-    private Map<String, Mesh> meshMap;
     private Projection projection;
     private Map<String, Model> modelMap;
+    private SceneLights sceneLights;
     private String ModelID;
 
     public Scene(int width, int height) {
-        meshMap = new HashMap<>();
         modelMap = new HashMap<>();
         projection = new Projection(width, height);
         textureCache = new TextureCache();
         camera = new Camera();
     }
 
-    public Camera getCamera() {
-        return camera;
+    public void setSceneLights(SceneLights sceneLights) {
+        this.sceneLights = sceneLights;
     }
 
+    public SceneLights getSceneLights() {
+        return sceneLights;
+    }
 
-    public void addMesh(String meshId, Mesh mesh) {
-        meshMap.put(meshId, mesh);
+    public Camera getCamera() {
+        return camera;
     }
 
     public void addEntity(Entity entity){
@@ -48,11 +50,7 @@ public class Scene {
         modelMap.put(model.getId(), model);
     }
 
-    public void cleanupMesh() {
-        meshMap.values().forEach(Mesh::cleanup);
-    }
-
-    public void cleanupModel() {
+    public void cleanup() {
         modelMap.values().forEach(Model::cleanup);
     }
 
@@ -62,10 +60,6 @@ public class Scene {
 
     public Projection getProjection() {
         return projection;
-    }
-
-    public Map<String, Mesh> getMeshMap() {
-        return meshMap;
     }
 
     public TextureCache getTextureCache(){
