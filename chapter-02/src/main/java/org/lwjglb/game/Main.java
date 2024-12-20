@@ -84,18 +84,18 @@ public class Main implements IAppLogic, IGuiInstance {
         //i need to for loop through models, rough idea is to put all models needed for a map into one folder, then parse through the folder while adding each model and texture then somehow manage to put the whole list of models inside that one folder into all their places
         //defines, loads and creates model specified (for loop through all files soon)
         Model cubeModel = ModelLoader.loadModel("cube-model", "chapter-02/resources/models/cube/cube.obj", scene.getTextureCache()); scene.addModel(cubeModel);
-        //Model rbModel = ModelLoader.loadModel("rb-model", "chapter-02/resources/models/rbmodel/rbmodel.obj", scene.getTextureCache()); scene.addModel(rbModel);
+        Model rbModel = ModelLoader.loadModel("rb-model", "chapter-02/resources/models/room/room.obj", scene.getTextureCache()); scene.addModel(rbModel);
 
         cubeEntity = new Entity("cube-entity", cubeModel.getId());
         cubeEntity.setPosition(0, 0f, -2);
         cubeEntity.updateModelMatrix(); //move cube
-        scene.addEntity(cubeEntity);
+        scene.addEntity(cubeEntity);    
         //FUNCTION POSITIONS MATTER BRUH that mght be the other issue and i dont even know how to begin with fixing sum like that
         //if ts dont have colour still its probably because inside the mtl file we are definind the Ka, Kd and Ks values as an image and value and in the tutorial they use set values
         
-        //rbEntity = new Entity("rb-model", rbModel.getId());
-        //rbEntity.setPosition(0, -1f, -2);
-        //scene.addEntity(rbEntity);
+        rbEntity = new Entity("rb-model", rbModel.getId());
+        rbEntity.setPosition(0, -1f, -2);
+        scene.addEntity(rbEntity);
 
 
         SceneLights sceneLights = new SceneLights();
