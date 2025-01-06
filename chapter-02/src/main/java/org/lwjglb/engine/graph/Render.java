@@ -17,6 +17,7 @@ public class Render {
 
     private GuiRender guiRender;
     private SceneRender RenderScene;
+    private SkyBoxRender skyBoxRender;
 
     public Render(Window window) {
         GL.createCapabilities();
@@ -25,6 +26,8 @@ public class Render {
         glCullFace(GL_BACK);
         RenderScene = new SceneRender();
         guiRender = new GuiRender(window);
+        skyBoxRender = new SkyBoxRender();
+
     }
 
     public void cleanup() {
@@ -35,8 +38,9 @@ public class Render {
     public void render(Window window, Scene scene) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glViewport(0, 0, window.getWidth(), window.getHeight());
-        guiRender.render(scene);
+        skyBoxRender.render(scene);
         RenderScene.render(scene);
+        guiRender.render(scene);
     }
     
     public void resize(int width, int height) {

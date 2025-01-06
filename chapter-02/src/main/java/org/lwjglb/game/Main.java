@@ -25,9 +25,8 @@ import org.lwjglb.engine.scene.Camera;
 import org.lwjglb.engine.scene.Entity;
 import org.lwjglb.engine.scene.ModelLoader;
 import org.lwjglb.engine.scene.Scene;
-import org.lwjglb.engine.scene.lights.PointLight;
+import org.lwjglb.engine.scene.lights.DirLight;
 import org.lwjglb.engine.scene.lights.SceneLights;
-import org.lwjglb.engine.scene.lights.SpotLight;
 
 import imgui.ImGui;
 import imgui.ImGuiIO;
@@ -44,6 +43,11 @@ public class Main implements IAppLogic, IGuiInstance {
     private float rotation;
     private static final float MOUSE_SENSITIVITY = 0.1f;
     private static final float MOVEMENT_SPEED = 0.005f;
+    private static final int NUM_CHUNKS = 4;
+
+    private float lightAngle;
+    private Entity[][] terrainEntities;
+
 
     public static void main(String[] args) {
         Main main = new Main();
@@ -80,34 +84,48 @@ public class Main implements IAppLogic, IGuiInstance {
     @Override
     public void init(Window window, Scene scene, Render render) {
         glfwSetInputMode(window.getWindowHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-        //i need to for loop through models, rough idea is to put all models needed for a map into one folder, then parse through the folder while adding each model and texture then somehow manage to put the whole list of models inside that one folder into all their places
-        //defines, loads and creates model specified (for loop through all files soon)
-        Model cubeModel = ModelLoader.loadModel("cube-model", "chapter-02/resources/models/cube/cube.obj", scene.getTextureCache()); scene.addModel(cubeModel);
-        Model rbModel = ModelLoader.loadModel("rb-model", "chapter-02/resources/models/room/room.obj", scene.getTextureCache()); scene.addModel(rbModel);
-
-        cubeEntity = new Entity("cube-entity", cubeModel.getId());
-        cubeEntity.setPosition(0, 0f, -2);
-        cubeEntity.updateModelMatrix(); //move cube
-        scene.addEntity(cubeEntity);    
-        //FUNCTION POSITIONS MATTER BRUH that mght be the other issue and i dont even know how to begin with fixing sum like that
-        //if ts dont have colour still its probably because inside the mtl file we are definind the Ka, Kd and Ks values as an image and value and in the tutorial they use set values
         
-        rbEntity = new Entity("rb-model", rbModel.getId());
-        rbEntity.setPosition(0, -1f, -2);
-        scene.addEntity(rbEntity);
+        // Model rbModel = ModelLoader.loadModel("rb-model", "chapter-02/resources/models/room/room.obj", scene.getTextureCache()); scene.addModel(rbModel);
+        // rbEntity = new Entity("rb-model", rbModel.getId());
+        // rbEntity.setPosition(0, -1f, -2);
+        // scene.addEntity(rbEntity);
 
+
+        
+        String wallNoNormalsModelId = "quad-no-normals-model";
+        Model quadModelNoNormals = ModelLoader.loadModel(wallNoNormalsModelId, "chapter-02/resources/models/wall/wall_nonormals.obj",
+                scene.getTextureCache());
+        scene.addModel(quadModelNoNormals);
+
+        Entity wallLeftEntity = new Entity("wallLeftEntity", wallNoNormalsModelId);
+        wallLeftEntity.setPosition(-3f, 0, 0);
+        wallLeftEntity.setScale(2.0f);
+        wallLeftEntity.updateModelMatrix();
+        scene.addEntity(wallLeftEntity);
+
+        String wallModelId = "quad-model";
+        Model quadModel = ModelLoader.loadModel(wallModelId, "chapter-02/resources/models/wall/wall.obj",
+                scene.getTextureCache());
+        scene.addModel(quadModel);
+
+        Entity wallRightEntity = new Entity("wallRightEntity", wallModelId);
+        wallRightEntity.setPosition(3f, 0, 0);
+        wallRightEntity.setScale(2.0f);
+        wallRightEntity.updateModelMatrix();
+        scene.addEntity(wallRightEntity);
 
         SceneLights sceneLights = new SceneLights();
-        sceneLights.getAmbientLight().setIntensity(0.3f);
+        sceneLights.getAmbientLight().setIntensity(0.2f);
+        DirLight dirLight = sceneLights.getDirLight();
+        dirLight.setPosition(1, 1, 0);
+        dirLight.setIntensity(1.0f);
         scene.setSceneLights(sceneLights);
-        sceneLights.getPointLights().add(new PointLight(new Vector3f(1, 1, 1), new Vector3f(0, 0, -1.4f), 1.0f));
 
-        Vector3f coneDir = new Vector3f(0, 0, -1);
-        sceneLights.getSpotLights().add(new SpotLight(new PointLight(new Vector3f(1, 1, 1), new Vector3f(0, 0, -1.4f), 0.0f), coneDir, 140.0f));
+        Camera camera = scene.getCamera();
+        camera.CamUp(5.0f);
+        camera.addRotation((float) Math.toRadians(90), 0);
 
-        lightControls = new LightControls(scene);
-        scene.setGuiInstance(lightControls);
+        lightAngle = -35;
     }
 
     @Override
@@ -122,32 +140,74 @@ public class Main implements IAppLogic, IGuiInstance {
         } else if (window.isKeyPressed(GLFW_KEY_S)) {
             camera.CamBackwards(move);
         }
-        if (window.isKeyPressed(GLFW_KEY_A )|| window.isKeyPressed(GLFW_KEY_LEFT)) {
+        if (window.isKeyPressed(GLFW_KEY_A)) {
             camera.CamLeft(move);
-        } else if (window.isKeyPressed(GLFW_KEY_D) || window.isKeyPressed(GLFW_KEY_RIGHT)) {
+        } else if (window.isKeyPressed(GLFW_KEY_D)) {
             camera.CamRight(move);
         }
-        if (window.isKeyPressed(GLFW_KEY_SPACE)) {
+        if (window.isKeyPressed(GLFW_KEY_SPACE)){
             camera.CamUp(move);
-        } else if (window.isKeyPressed(GLFW_KEY_LEFT_SHIFT)) {
+        } else if (window.isKeyPressed(GLFW_KEY_LEFT_SHIFT)){
             camera.CamDown(move);
+        }
+        if (window.isKeyPressed(GLFW_KEY_LEFT)) {
+            lightAngle -= 2.5f;
+            if (lightAngle < -90) {
+                lightAngle = -90;
+            }
+        } else if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
+            lightAngle += 2.5f;
+            if (lightAngle > 90) {
+                lightAngle = 90;
+            }
         }
 
         MouseInput mouseInput = window.getMouseInput();
-        //if (mouseInput.isLeftButtonPressed()) {
+        //if (mouseInput.isRightButtonPressed()) {
             Vector2f displVec = mouseInput.getDisplVec();
-            camera.addRotation((float) Math.toRadians(displVec.x * MOUSE_SENSITIVITY), (float) Math.toRadians(displVec.y * MOUSE_SENSITIVITY));
-            //System.out.println(displVec.x + displVec.y);
+            camera.addRotation((float) Math.toRadians(-displVec.x * MOUSE_SENSITIVITY), (float) Math.toRadians(-displVec.y * MOUSE_SENSITIVITY));
         //}
+
+        SceneLights sceneLights = scene.getSceneLights();
+        DirLight dirLight = sceneLights.getDirLight();
+        double angRad = Math.toRadians(lightAngle);
+        dirLight.getDirection().x = (float) Math.sin(angRad);
+        dirLight.getDirection().y = (float) Math.cos(angRad);
     }
 
     @Override
     public void update(Window window, Scene scene, long diffTimeMillis) {
         //I HAVE NUTTHHINGGGGGGG :((((
+        //updateTerrain(scene);
     }
 
     public void input(Window window, Scene scene, long diffTimeMillis) {
         throw new UnsupportedOperationException("Unimplemented method 'input'");
+    }
+
+    
+    public void updateTerrain(Scene scene) {
+        int cellSize = 10;
+        Camera camera = scene.getCamera();
+        Vector3f cameraPos = camera.getPosition();
+        int cellCol = (int) (cameraPos.x / cellSize);
+        int cellRow = (int) (cameraPos.z / cellSize);
+
+        int numRows = NUM_CHUNKS * 2 + 1;
+        int numCols = numRows;
+        int zOffset = -NUM_CHUNKS;
+        float scale = cellSize / 2.0f;
+        for (int j = 0; j < numRows; j++) {
+            int xOffset = -NUM_CHUNKS;
+            for (int i = 0; i < numCols; i++) {
+                Entity entity = terrainEntities[j][i];
+                entity.setScale(scale);
+                entity.setPosition((cellCol + xOffset) * 2.0f, 0, (cellRow + zOffset) * 2.0f);
+                entity.returnMatrix().identity().scale(scale).translate(entity.returnPosition());
+                xOffset++;
+            }
+            zOffset++;
+        }
     }
 
 }

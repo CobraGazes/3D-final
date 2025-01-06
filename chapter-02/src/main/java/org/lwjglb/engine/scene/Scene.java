@@ -11,7 +11,9 @@ import org.lwjglb.engine.scene.lights.SceneLights;
 public class Scene {
 
     private IGuiInstance guiInstance;
+    private SkyBox skyBox;
     private Camera camera;
+    private Fog fog;
     private TextureCache textureCache;
     private Projection projection;
     private Map<String, Model> modelMap;
@@ -23,6 +25,7 @@ public class Scene {
         projection = new Projection(width, height);
         textureCache = new TextureCache();
         camera = new Camera();
+        fog = new Fog();
     }
 
     public void setSceneLights(SceneLights sceneLights) {
@@ -36,6 +39,11 @@ public class Scene {
     public Camera getCamera() {
         return camera;
     }
+
+    public Fog getFog() {
+        return fog;
+    }
+
 
     public void addEntity(Entity entity){
         ModelID = entity.returnModelID();
@@ -77,5 +85,18 @@ public class Scene {
     public IGuiInstance getGuiInstance() {
         return guiInstance;
     }
+
+    public SkyBox getSkyBox() {
+        return skyBox;
+    }
+    
+    public void setSkyBox(SkyBox skyBox) {
+        this.skyBox = skyBox;
+    }
+
+    public void setFog(Fog fog) {
+        this.fog = fog;
+    }
+
 
 }

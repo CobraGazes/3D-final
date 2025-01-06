@@ -10,6 +10,7 @@ public class Material {
     public static final Vector4f DEFAULT_COLOR = new Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
 
     private Vector4f ambientColor;
+    private String normalMapPath;
     private Vector4f diffuseColor;
     private List<Mesh> meshList;
     private float reflectance;
@@ -49,6 +50,14 @@ public class Material {
 
     public String getTexturePath() {
         return texturePath;
+    }
+
+    public String getNormalMapPath() {
+        return normalMapPath;
+    }
+    
+    public void setNormalMapPath(String normalMapPath) {
+        this.normalMapPath = normalMapPath;
     }
 
     public void setAmbientColor(Vector4f ambientColor) {
