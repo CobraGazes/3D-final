@@ -12,6 +12,7 @@ public class Entity {
     private Vector3f position;
     private Quaternionf rotation;
     private float scale;
+    private AnimationData animationData;
     
     public Entity(String id, String modelID){
         this.modelId = modelID;
@@ -64,4 +65,13 @@ public class Entity {
     public void updateModelMatrix(){
         Modelmatrix.translationRotateScale(position, rotation, scale);
     }
+    
+    public void setAnimationData(AnimationData animationData) {
+        this.animationData = animationData;
+    }
+
+    public AnimationData getAnimationData() {
+        return animationData;
+    }
+
 }

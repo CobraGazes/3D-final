@@ -23,6 +23,7 @@ import static org.lwjgl.opengl.GL14.glBlendEquation;
 import static org.lwjgl.opengl.GL20.GL_FRAGMENT_SHADER;
 import static org.lwjgl.opengl.GL20.GL_VERTEX_SHADER;
 import static org.lwjgl.opengl.GL30.glBindVertexArray;
+import org.lwjglb.engine.scene.AnimationData;
 import org.lwjglb.engine.scene.Entity;
 import org.lwjglb.engine.scene.Fog;
 import org.lwjglb.engine.scene.Scene;
@@ -31,6 +32,7 @@ import org.lwjglb.engine.scene.lights.DirLight;
 import org.lwjglb.engine.scene.lights.PointLight;
 import org.lwjglb.engine.scene.lights.SceneLights;
 import org.lwjglb.engine.scene.lights.SpotLight;
+
 
 public class SceneRender {
 
@@ -65,6 +67,7 @@ public class SceneRender {
         uniformsMap.createUniform("material.specular");
         uniformsMap.createUniform("material.reflectance");
         uniformsMap.createUniform("material.hasNormalMap");
+        uniformsMap.createUniform("bonesMatrices");
         uniformsMap.createUniform("ambientLight.factor");
         uniformsMap.createUniform("ambientLight.color");
 
@@ -145,6 +148,12 @@ public class SceneRender {
                     glBindVertexArray(mesh.getVaoId());
                     for (Entity entity : entities) {
                         uniformsMap.setUniform("modelMatrix", entity.returnMatrix());
+                        AnimationData animationData = entity.getAnimationData();
+                        if (animationData == null) {
+                            uniformsMap.setUniform("bonesMatrices", AnimationData.DEFAULT_BONES_MATRICES);
+                        } else {
+                            uniformsMap.setUniform("bonesMatrices", animationData.getCurrentFrame().boneMatrices());
+                        }
                         glDrawElements(GL_TRIANGLES, mesh.getNumVertices(), GL_UNSIGNED_INT, 0);
                     }
                 }

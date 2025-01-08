@@ -14,6 +14,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_OPENGL_PROFILE;
 import static org.lwjgl.glfw.GLFW.GLFW_PRESS;
 import static org.lwjgl.glfw.GLFW.GLFW_RELEASE;
 import static org.lwjgl.glfw.GLFW.GLFW_RESIZABLE;
+import static org.lwjgl.glfw.GLFW.GLFW_SAMPLES;
 import static org.lwjgl.glfw.GLFW.GLFW_TRUE;
 import static org.lwjgl.glfw.GLFW.GLFW_VISIBLE;
 import static org.lwjgl.glfw.GLFW.glfwCreateWindow;
@@ -45,7 +46,6 @@ import static org.lwjgl.system.MemoryUtil.NULL;
 import org.tinylog.Logger;
 
 public class Window {
-
     private final long windowHandle;
     private int height;
     private Callable<Void> resizeFunc;
@@ -56,6 +56,9 @@ public class Window {
         this.resizeFunc = resizeFunc;
         if (!glfwInit()) {
             throw new IllegalStateException("Unable to initialize GLFW");
+        }
+        if (opts.antiAliasing) {
+            glfwWindowHint(GLFW_SAMPLES, 4);
         }
 
         glfwDefaultWindowHints();
@@ -118,6 +121,7 @@ public class Window {
         mouseInput = new MouseInput(windowHandle);
     }
 
+
     public MouseInput getMouseInput(){
         return mouseInput;
     }
@@ -177,6 +181,7 @@ public class Window {
     }
 
     public static class WindowOptions {
+        public boolean antiAliasing;
         public boolean compatibleProfile;
         public int fps;
         public int height;

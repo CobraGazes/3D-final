@@ -21,10 +21,14 @@ import org.lwjglb.engine.MouseInput;
 import org.lwjglb.engine.Window;
 import org.lwjglb.engine.graph.Model;
 import org.lwjglb.engine.graph.Render;
+import org.lwjglb.engine.scene.AnimationData;
 import org.lwjglb.engine.scene.Camera;
 import org.lwjglb.engine.scene.Entity;
+import org.lwjglb.engine.scene.Fog;
 import org.lwjglb.engine.scene.ModelLoader;
 import org.lwjglb.engine.scene.Scene;
+import org.lwjglb.engine.scene.SkyBox;
+import org.lwjglb.engine.scene.lights.AmbientLight;
 import org.lwjglb.engine.scene.lights.DirLight;
 import org.lwjglb.engine.scene.lights.SceneLights;
 
@@ -44,6 +48,7 @@ public class Main implements IAppLogic, IGuiInstance {
     private static final float MOUSE_SENSITIVITY = 0.1f;
     private static final float MOVEMENT_SPEED = 0.005f;
     private static final int NUM_CHUNKS = 4;
+    private AnimationData animationData;
 
     private float lightAngle;
     private Entity[][] terrainEntities;
@@ -51,7 +56,9 @@ public class Main implements IAppLogic, IGuiInstance {
 
     public static void main(String[] args) {
         Main main = new Main();
-        Engine gameEng = new Engine("This isnt gonna work", new Window.WindowOptions(), main);
+        Window.WindowOptions opts = new Window.WindowOptions();
+        opts.antiAliasing = true;
+        Engine gameEng = new Engine("I DID NOT HEAR BANANAS!!!!!!!", opts, main);
         gameEng.run();
     }
 
@@ -81,8 +88,11 @@ public class Main implements IAppLogic, IGuiInstance {
         // Nothing to be done yet
     }
 
+
+
     @Override
     public void init(Window window, Scene scene, Render render) {
+
         glfwSetInputMode(window.getWindowHandle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         
         // Model rbModel = ModelLoader.loadModel("rb-model", "chapter-02/resources/models/room/room.obj", scene.getTextureCache()); scene.addModel(rbModel);
@@ -91,41 +101,47 @@ public class Main implements IAppLogic, IGuiInstance {
         // scene.addEntity(rbEntity);
 
 
-        
-        String wallNoNormalsModelId = "quad-no-normals-model";
-        Model quadModelNoNormals = ModelLoader.loadModel(wallNoNormalsModelId, "chapter-02/resources/models/wall/wall_nonormals.obj",
-                scene.getTextureCache());
-        scene.addModel(quadModelNoNormals);
+        String terrainModelId = "terrain";
+        Model terrainModel = ModelLoader.loadModel(terrainModelId, "chapter-02/resources/models/terrain/terrain.obj",
+                scene.getTextureCache(), false);
+        scene.addModel(terrainModel);
+        Entity terrainEntity = new Entity("terrainEntity", terrainModelId);
+        terrainEntity.setScale(100.0f);
+        terrainEntity.updateModelMatrix();
+        scene.addEntity(terrainEntity);
 
-        Entity wallLeftEntity = new Entity("wallLeftEntity", wallNoNormalsModelId);
-        wallLeftEntity.setPosition(-3f, 0, 0);
-        wallLeftEntity.setScale(2.0f);
-        wallLeftEntity.updateModelMatrix();
-        scene.addEntity(wallLeftEntity);
-
-        String wallModelId = "quad-model";
-        Model quadModel = ModelLoader.loadModel(wallModelId, "chapter-02/resources/models/wall/wall.obj",
-                scene.getTextureCache());
-        scene.addModel(quadModel);
-
-        Entity wallRightEntity = new Entity("wallRightEntity", wallModelId);
-        wallRightEntity.setPosition(3f, 0, 0);
-        wallRightEntity.setScale(2.0f);
-        wallRightEntity.updateModelMatrix();
-        scene.addEntity(wallRightEntity);
+        String bobModelId = "bobModel";
+        Model bobModel = ModelLoader.loadModel(bobModelId, "chapter-02/resources/models/bob/boblamp.md5mesh",
+                scene.getTextureCache(), true);
+        scene.addModel(bobModel);
+        Entity bobEntity = new Entity("bobEntity", bobModelId);
+        bobEntity.setScale(0.05f);
+        bobEntity.updateModelMatrix();
+        animationData = new AnimationData(bobModel.getAnimationList().get(0));
+        bobEntity.setAnimationData(animationData);
+        scene.addEntity(bobEntity);
 
         SceneLights sceneLights = new SceneLights();
-        sceneLights.getAmbientLight().setIntensity(0.2f);
+        AmbientLight ambientLight = sceneLights.getAmbientLight();
+        ambientLight.setIntensity(0.5f);
+        ambientLight.setColor(0.3f, 0.3f, 0.3f);
+
         DirLight dirLight = sceneLights.getDirLight();
-        dirLight.setPosition(1, 1, 0);
+        dirLight.setPosition(0, 1, 0);
         dirLight.setIntensity(1.0f);
         scene.setSceneLights(sceneLights);
 
-        Camera camera = scene.getCamera();
-        camera.CamUp(5.0f);
-        camera.addRotation((float) Math.toRadians(90), 0);
+        SkyBox skyBox = new SkyBox("chapter-02/resources/models/skybox/skybox.obj", scene.getTextureCache());
+        skyBox.getSkyBoxEntity().setScale(100);
+        skyBox.getSkyBoxEntity().updateModelMatrix();
+        scene.setSkyBox(skyBox);
 
-        lightAngle = -35;
+        scene.setFog(new Fog(true, new Vector3f(0.5f, 0.5f, 0.5f), 0.02f));
+
+        Camera camera = scene.getCamera();
+        camera.setPosition(-1.5f, 3.0f, 4.5f);
+        camera.addRotation((float) Math.toRadians(15.0f), (float) Math.toRadians(390.f));
+        lightAngle = 0;
     }
 
     @Override
@@ -165,7 +181,7 @@ public class Main implements IAppLogic, IGuiInstance {
         MouseInput mouseInput = window.getMouseInput();
         //if (mouseInput.isRightButtonPressed()) {
             Vector2f displVec = mouseInput.getDisplVec();
-            camera.addRotation((float) Math.toRadians(-displVec.x * MOUSE_SENSITIVITY), (float) Math.toRadians(-displVec.y * MOUSE_SENSITIVITY));
+            camera.addRotation((float) Math.toRadians(displVec.x * MOUSE_SENSITIVITY), (float) Math.toRadians(displVec.y * MOUSE_SENSITIVITY));
         //}
 
         SceneLights sceneLights = scene.getSceneLights();
@@ -179,6 +195,7 @@ public class Main implements IAppLogic, IGuiInstance {
     public void update(Window window, Scene scene, long diffTimeMillis) {
         //I HAVE NUTTHHINGGGGGGG :((((
         //updateTerrain(scene);
+        animationData.nextFrame();
     }
 
     public void input(Window window, Scene scene, long diffTimeMillis) {
