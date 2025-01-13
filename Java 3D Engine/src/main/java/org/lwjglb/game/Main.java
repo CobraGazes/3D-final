@@ -14,6 +14,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
 import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
+import org.lwjgl.openal.AL11;
 import org.lwjglb.engine.Engine;
 import org.lwjglb.engine.IAppLogic;
 import org.lwjglb.engine.IGuiInstance;
@@ -32,6 +33,10 @@ import org.lwjglb.engine.scene.SkyBox;
 import org.lwjglb.engine.scene.lights.AmbientLight;
 import org.lwjglb.engine.scene.lights.DirLight;
 import org.lwjglb.engine.scene.lights.SceneLights;
+import org.lwjglb.engine.sound.SoundBuffer;
+import org.lwjglb.engine.sound.SoundListener;
+import org.lwjglb.engine.sound.SoundManager;
+import org.lwjglb.engine.sound.SoundSource;
 
 import imgui.ImGui;
 import imgui.ImGuiIO;
@@ -41,6 +46,8 @@ import imgui.flag.ImGuiCond;
 
 public class Main implements IAppLogic, IGuiInstance {
 
+    private SoundSource playerSoundSource;
+    private SoundManager soundMgr;
     private LightControls lightControls;
     private Entity cubeEntity;
     private Entity rbEntity;
@@ -86,9 +93,36 @@ public class Main implements IAppLogic, IGuiInstance {
 
     @Override
     public void cleanup() {
-        // Nothing to be done yet
+        soundMgr.cleanup();
     }
 
+    private void initSounds(Vector3f position, Camera camera) {
+        soundMgr = new SoundManager();
+        soundMgr.setAttenuationModel(AL11.AL_EXPONENT_DISTANCE);
+        soundMgr.setListener(new SoundListener(camera.getPosition()));
+
+        SoundBuffer buffer = new SoundBuffer("resources/sounds/creak1.ogg");
+        soundMgr.addSoundBuffer(buffer);
+        playerSoundSource = new SoundSource(false, false);
+        playerSoundSource.setPosition(position);
+        playerSoundSource.setBuffer(buffer.getBufferId());
+        soundMgr.addSoundSource("CREAK", playerSoundSource);
+
+        buffer = new SoundBuffer("resources/sounds/woo_scary.ogg");
+        soundMgr.addSoundBuffer(buffer);
+        SoundSource source = new SoundSource(true, true);
+        source.setBuffer(buffer.getBufferId());
+        soundMgr.addSoundSource("MUSIC", source);
+        source.play();
+
+        buffer = new SoundBuffer("resources/sounds/ahhh.ogg");
+        soundMgr.addSoundBuffer(buffer);
+        playerSoundSource = new SoundSource(true, false);
+        playerSoundSource.setPosition(position);
+        playerSoundSource.setBuffer(buffer.getBufferId());
+        soundMgr.addSoundSource("CREAK", playerSoundSource);
+
+    }
 
 
     @Override
@@ -145,7 +179,8 @@ public class Main implements IAppLogic, IGuiInstance {
         Camera camera = scene.getCamera();
         camera.setPosition(-1.5f, 3.0f, 4.5f);
         camera.addRotation((float) Math.toRadians(15.0f), (float) Math.toRadians(390.f));
-        lightAngle = 0;
+        lightAngle = 45;
+        initSounds(bobEntity.returnPosition(), camera);
     }
 
     @Override
@@ -182,6 +217,8 @@ public class Main implements IAppLogic, IGuiInstance {
             }
         }
 
+        soundMgr.updateListenerPosition(camera);
+
         MouseInput mouseInput = window.getMouseInput();
         //if (mouseInput.isRightButtonPressed()) {
             Vector2f displVec = mouseInput.getDisplVec();
@@ -200,6 +237,9 @@ public class Main implements IAppLogic, IGuiInstance {
         //I HAVE NUTTHHINGGGGGGG :((((
         //updateTerrain(scene);
         animationData.nextFrame();
+        if (animationData.getCurrentFrameIdx() == 45) {
+            playerSoundSource.play();
+        }
     }
 
     public void input(Window window, Scene scene, long diffTimeMillis) {
