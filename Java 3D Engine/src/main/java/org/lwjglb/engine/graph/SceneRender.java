@@ -17,6 +17,7 @@ import static org.lwjgl.opengl.GL11.glDrawElements;
 import static org.lwjgl.opengl.GL11.glEnable;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE0;
 import static org.lwjgl.opengl.GL13.GL_TEXTURE1;
+import static org.lwjgl.opengl.GL13.GL_TEXTURE2;
 import static org.lwjgl.opengl.GL13.glActiveTexture;
 import static org.lwjgl.opengl.GL14.GL_FUNC_ADD;
 import static org.lwjgl.opengl.GL14.glBlendEquation;
@@ -100,9 +101,14 @@ public class SceneRender {
         uniformsMap.createUniform("fog.color");
         uniformsMap.createUniform("fog.density");
 
+        for (int i = 0; i < CascadeShadow.SHADOW_MAP_CASCADE_COUNT; i++) {
+            uniformsMap.createUniform("shadowMap[" + i + "]");
+            uniformsMap.createUniform("cascadeshadows[" + i + "]" + ".projViewMatrix");
+            uniformsMap.createUniform("cascadeshadows[" + i + "]" + ".splitDistance");
+        }
     }
 
-    public void render(Scene scene) {
+    public void render(Scene scene, ShadowRender shadowRender) {
         glEnable(GL_BLEND);
         glBlendEquation(GL_FUNC_ADD);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -112,6 +118,18 @@ public class SceneRender {
         uniformsMap.setUniform("viewMatrix", scene.getCamera().getViewMatrix());
         uniformsMap.setUniform("txtSampler", 0);
         uniformsMap.setUniform("normalSampler", 1);
+
+        int start = 2;
+        List<CascadeShadow> cascadeShadows = shadowRender.getCascadeShadows();
+        for (int i = 0; i < CascadeShadow.SHADOW_MAP_CASCADE_COUNT; i++) {
+            uniformsMap.setUniform("shadowMap[" + i + "]", start + i);
+            CascadeShadow cascadeShadow = cascadeShadows.get(i);
+            uniformsMap.setUniform("cascadeshadows[" + i + "]" + ".projViewMatrix", cascadeShadow.getProjViewMatrix());
+            uniformsMap.setUniform("cascadeshadows[" + i + "]" + ".splitDistance", cascadeShadow.getSplitDistance());
+        }
+
+        shadowRender.getShadowBuffer().bindTextures(GL_TEXTURE2);
+
 
         updateLights(scene);
 

@@ -46,6 +46,7 @@ import imgui.flag.ImGuiCond;
 
 public class Main implements IAppLogic, IGuiInstance {
 
+    private boolean decreasing = true; // Direction flag
     private SoundSource playerSoundSource;
     private SoundManager soundMgr;
     private LightControls lightControls;
@@ -106,22 +107,14 @@ public class Main implements IAppLogic, IGuiInstance {
         playerSoundSource = new SoundSource(false, false);
         playerSoundSource.setPosition(position);
         playerSoundSource.setBuffer(buffer.getBufferId());
-        soundMgr.addSoundSource("CREAK", playerSoundSource);
+        //soundMgr.addSoundSource("CREAK", playerSoundSource);
 
-        buffer = new SoundBuffer("resources/sounds/woo_scary.ogg");
+        buffer = new SoundBuffer("resources/sounds/supernova.ogg");
         soundMgr.addSoundBuffer(buffer);
         SoundSource source = new SoundSource(true, true);
         source.setBuffer(buffer.getBufferId());
         soundMgr.addSoundSource("MUSIC", source);
         source.play();
-
-        buffer = new SoundBuffer("resources/sounds/ahhh.ogg");
-        soundMgr.addSoundBuffer(buffer);
-        playerSoundSource = new SoundSource(true, false);
-        playerSoundSource.setPosition(position);
-        playerSoundSource.setBuffer(buffer.getBufferId());
-        soundMgr.addSoundSource("CREAK", playerSoundSource);
-
     }
 
 
@@ -145,6 +138,8 @@ public class Main implements IAppLogic, IGuiInstance {
         Model bobModel = ModelLoader.loadModel(bobModelId, "resources/models/bob/boblamp.md5mesh", scene.getTextureCache(), true);
         scene.addModel(bobModel);
         Entity bobEntity = new Entity("bobEntity", bobModelId);
+        bobEntity.setPosition(3, 0, -2);
+        bobEntity.setRotation(0, 80, 0, 6);
         bobEntity.setScale(0.05f);
         bobEntity.updateModelMatrix();
         animationData = new AnimationData(bobModel.getAnimationList().get(0));
@@ -152,11 +147,11 @@ public class Main implements IAppLogic, IGuiInstance {
         scene.addEntity(bobEntity);
 
 
-        String rbModelID = "rbModel";
-        Model rbModel = ModelLoader.loadModel(rbModelID, "resources/models/room/room.obj", scene.getTextureCache(), false);
-        scene.addModel(rbModel);
-        rbEntity = new Entity("rb-model", rbModel.getId());
-        scene.addEntity(rbEntity);
+        // String rbModelID = "rbModel";
+        // Model rbModel = ModelLoader.loadModel(rbModelID, "resources/models/room/room.obj", scene.getTextureCache(), false);
+        // scene.addModel(rbModel);
+        // rbEntity = new Entity("rb-model", rbModel.getId());
+        // scene.addEntity(rbEntity);
 
 
         SceneLights sceneLights = new SceneLights();
@@ -177,8 +172,8 @@ public class Main implements IAppLogic, IGuiInstance {
         scene.setFog(new Fog(true, new Vector3f(0.5f, 0.5f, 0.5f), 0.02f));
 
         Camera camera = scene.getCamera();
-        camera.setPosition(-1.5f, 3.0f, 4.5f);
-        camera.addRotation((float) Math.toRadians(15.0f), (float) Math.toRadians(390.f));
+        camera.setPosition(2.0f, 3.0f, 4.5f);
+        //camera.addRotation((float) Math.toRadians(95.0f), (float) Math.toRadians(390.f));
         lightAngle = 45;
         initSounds(bobEntity.returnPosition(), camera);
     }
@@ -208,7 +203,7 @@ public class Main implements IAppLogic, IGuiInstance {
         if (window.isKeyPressed(GLFW_KEY_LEFT)) {
             lightAngle -= 2.5f;
             if (lightAngle < -90) {
-                lightAngle = -90;
+                lightAngle = 180;
             }
         } else if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
             lightAngle += 2.5f;
