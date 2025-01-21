@@ -60,7 +60,7 @@ import org.lwjglb.engine.graph.Model;
 import org.lwjglb.engine.graph.TextureCache;
 
 
-
+//stupid
 public class ModelLoader {
 
     public static final int MAX_BONES = 150;
