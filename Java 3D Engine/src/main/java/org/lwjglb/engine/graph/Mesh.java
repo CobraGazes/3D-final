@@ -5,6 +5,7 @@ import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.joml.Vector3f;
 import static org.lwjgl.opengl.GL11.GL_FLOAT;
 import static org.lwjgl.opengl.GL15.GL_ARRAY_BUFFER;
 import static org.lwjgl.opengl.GL15.GL_ELEMENT_ARRAY_BUFFER;
@@ -26,14 +27,21 @@ public class Mesh {
     private int vaoId;
     private List<Integer> vboIdList;
     public static final int MAX_WEIGHTS = 4;
+    private Vector3f aabbMax;
+    private Vector3f aabbMin;
+
 
     public Mesh(float[] positions, float[] normals, float[] tangents, float[] bitangents, float[] textCoords, int[] indices) {
         this(positions, normals, tangents, bitangents, textCoords, indices,
-                new int[Mesh.MAX_WEIGHTS * positions.length / 3], new float[Mesh.MAX_WEIGHTS * positions.length / 3]);
+                new int[Mesh.MAX_WEIGHTS * positions.length / 3], new float[Mesh.MAX_WEIGHTS * positions.length / 3],
+                new Vector3f(), new Vector3f());
     }
 
-    public Mesh(float[] positions, float[] normals, float[] tangents, float[] bitangents, float[] textCoords, int[] indices, int[] boneIndices, float[] weights) {
+    public Mesh(float[] positions, float[] normals, float[] tangents, float[] bitangents, float[] textCoords, int[] indices, int[] boneIndices, float[] weights, Vector3f aabbMin, Vector3f aabbMax) {
         try (MemoryStack stack = MemoryStack.stackPush()) {
+            // aabbMax = indices.length;
+            this.aabbMax = aabbMax;
+            this.aabbMin = aabbMin;
             numVertices = indices.length;
             vboIdList = new ArrayList<>();
 
@@ -135,5 +143,13 @@ public class Mesh {
 
     public final int getVaoId() {
         return vaoId;
+    }
+
+    public Vector3f getAabbMax() {
+        return aabbMax;
+    }
+
+    public Vector3f getAabbMin() {
+        return aabbMin;
     }
 }

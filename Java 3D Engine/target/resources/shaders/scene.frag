@@ -8,6 +8,7 @@ const int NUM_CASCADES = 3;
 const float BIAS = 0.0005;
 const float SHADOW_FACTOR = 0.25;
 
+
 in vec3 outNormal;
 in vec3 outTangent;
 in vec3 outBitangent;
@@ -65,6 +66,7 @@ struct CascadeShadow {
     float splitDistance;
 };
 
+uniform int selected;
 uniform sampler2D txtSampler;
 uniform sampler2D normalSampler;
 uniform Material material;
@@ -175,7 +177,7 @@ void main() {
     vec4 ambient = calcAmbient(ambientLight, text_color + material.ambient);
     vec4 diffuse = text_color + material.diffuse;
     vec4 specular = text_color + material.specular;
-
+    
     vec3 normal = outNormal;
     if (material.hasNormalMap > 0) {
         normal = calcNormal(outNormal, outTangent, outBitangent, outTextCoord);
@@ -224,5 +226,8 @@ void main() {
             fragColor.rgb *= vec3(1.0f, 1.0f, 0.25f);
             break;
         }
+    }
+    if (selected > 0) {
+        fragColor = vec4(fragColor.x, fragColor.y, 1, 1);
     }
 }

@@ -17,6 +17,7 @@ public class Scene {
     private TextureCache textureCache;
     private Projection projection;
     private Map<String, Model> modelMap;
+    private Entity selectedEntity;
     private SceneLights sceneLights;
     private String ModelID;
 
@@ -96,6 +97,14 @@ public class Scene {
 
     public void setFog(Fog fog) {
         this.fog = fog;
+    }
+
+    public Entity getSelectedEntity() {
+        return selectedEntity;
+    }
+    
+    public void setSelectedEntity(Entity selectedEntity) {
+        this.selectedEntity = selectedEntity;
     }
 
 
