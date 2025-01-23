@@ -63,6 +63,9 @@ import org.lwjglb.engine.graph.TextureCache;
 //stupid
 public class ModelLoader {
 
+    public static Vector3f aabbMin = new Vector3f();
+    public static Vector3f aabbMax = new Vector3f();
+
     public static final int MAX_BONES = 150;
     private static final Matrix4f IDENTITY_MATRIX = new Matrix4f();
     
@@ -436,8 +439,8 @@ public class ModelLoader {
 
 
         AIAABB aabb = aiMesh.mAABB();
-        Vector3f aabbMin = new Vector3f(aabb.mMin().x(), aabb.mMin().y(), aabb.mMin().z());
-        Vector3f aabbMax = new Vector3f(aabb.mMax().x(), aabb.mMax().y(), aabb.mMax().z());
+        aabbMin = new Vector3f(aabb.mMin().x(), aabb.mMin().y(), aabb.mMin().z());
+        aabbMax = new Vector3f(aabb.mMax().x(), aabb.mMax().y(), aabb.mMax().z());
 
         return new Mesh(vertices, normals, tangents, bitangents, textCoords, indices, animMeshData.boneIds, animMeshData.weights, aabbMin, aabbMax);
     }

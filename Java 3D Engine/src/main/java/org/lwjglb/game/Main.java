@@ -1,5 +1,8 @@
 package org.lwjglb.game;
 
+import java.util.Collection;
+import java.util.List;
+
 import org.joml.Intersectionf;
 import org.joml.Matrix4f;
 import org.joml.Vector2f;
@@ -7,8 +10,8 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import static org.lwjgl.glfw.GLFW.GLFW_CURSOR;
 import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_CAPTURED;
-import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_A;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_C;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_D;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_SHIFT;
@@ -16,11 +19,8 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_S;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_SPACE;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_W;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_Z;
 import static org.lwjgl.glfw.GLFW.glfwSetInputMode;
-
-import java.util.Collection;
-import java.util.List;
-
 import org.lwjgl.openal.AL11;
 import org.lwjglb.engine.Engine;
 import org.lwjglb.engine.IAppLogic;
@@ -30,6 +30,7 @@ import org.lwjglb.engine.MouseInput;
 import org.lwjglb.engine.Window;
 import org.lwjglb.engine.graph.Material;
 import org.lwjglb.engine.graph.Mesh;
+import org.lwjglb.engine.graph.MeshInfo;
 import org.lwjglb.engine.graph.Model;
 import org.lwjglb.engine.graph.Render;
 import org.lwjglb.engine.scene.AnimationData;
@@ -37,7 +38,6 @@ import org.lwjglb.engine.scene.Camera;
 import org.lwjglb.engine.scene.Entity;
 import org.lwjglb.engine.scene.Fog;
 import org.lwjglb.engine.scene.ModelLoader;
-import org.lwjglb.engine.scene.PhysicsWorld;
 import org.lwjglb.engine.scene.Scene;
 import org.lwjglb.engine.scene.SkyBox;
 import org.lwjglb.engine.scene.lights.AmbientLight;
@@ -48,24 +48,33 @@ import org.lwjglb.engine.sound.SoundListener;
 import org.lwjglb.engine.sound.SoundManager;
 import org.lwjglb.engine.sound.SoundSource;
 
-import com.bulletphysics.collision.dispatch.CollisionObject;
-
 import imgui.ImGui;
 import imgui.ImGuiIO;
 import imgui.flag.ImGuiCond;
 
 public class Main implements IAppLogic, IGuiInstance {
 
+
+    Vector3f Finalmin;
+    Vector3f Finalmax;
+    private String modelIds;
+    private String cubeModelId;
     private boolean decreasing = true; // Direction flag
     private SoundSource playerSoundSource;
     private SoundManager soundMgr;
     private LightControls lightControls;
     private Entity cubeEntity1;
     private Entity cubeEntity2;
+    private Model cubeModel;
+    //private Model cubeModel2;
+    private MeshInfo info;
     private float cuberotation;
     private Entity rbEntity;
     private Vector4f displInc = new Vector4f();
     private float rotation;
+
+    private Vector3f cubepos1;
+
     private static final float MOUSE_SENSITIVITY = 0.1f;
     private static final float MOVEMENT_SPEED = 0.005f;
     private static final int NUM_CHUNKS = 4;
@@ -129,7 +138,7 @@ public class Main implements IAppLogic, IGuiInstance {
         source.play();
     }
 
-        private void selectEntity(Window window, Scene scene, Vector2f mousePos) {
+    private void selectEntity(Window window, Scene scene, Vector2f mousePos) {
         int wdwWidth = window.getWidth();
         int wdwHeight = window.getHeight();
 
@@ -168,6 +177,7 @@ public class Main implements IAppLogic, IGuiInstance {
                         Vector3f aabMax = mesh.getAabbMax();
                         max.set(aabMax.x, aabMax.y, aabMax.z, 1.0f);
                         max.mul(modelMatrix);
+
                         if (Intersectionf.intersectRayAab(center.x, center.y, center.z, mouseDir.x, mouseDir.y, mouseDir.z,
                                 min.x, min.y, min.z, max.x, max.y, max.z, nearFar) && nearFar.x < closestDistance) {
                             closestDistance = nearFar.x;
@@ -182,6 +192,85 @@ public class Main implements IAppLogic, IGuiInstance {
         scene.setSelectedEntity(selectedEntity);
     }
 
+    private void defineMeshInfo(Scene scene){
+        Vector4f min = new Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
+        Vector4f max = new Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
+
+
+        Collection<Model> models = scene.returnModelMap().values();
+        Matrix4f modelMatrix = new Matrix4f();
+        for (Model model : models) {
+            List<Entity> entities = model.getEntitiesList();
+            modelIds = model.getId();
+            for (Entity entity : entities) {
+                modelMatrix.translate(entity.returnPosition()).scale(entity.returnScale());
+                for (Material material : model.getMaterialList()) {
+                    for (Mesh mesh : material.getMeshList()) {
+                        
+                        Vector3f aabMin = mesh.getAabbMin();
+                        min.set(aabMin.x, aabMin.y, aabMin.z, 1.0f);
+                        min.mul(modelMatrix);
+                        Vector3f aabMax = mesh.getAabbMax();
+                        max.set(aabMax.x, aabMax.y, aabMax.z, 1.0f);
+                        max.mul(modelMatrix);
+
+                        MeshInfo.addMeshinfo(min, max, model.getId());
+                    }
+                }
+                modelMatrix.identity();
+            }
+        }
+
+    }
+
+    private void isColliding(Scene scene, Vector4f InMin, Vector4f InMax) {
+
+        Vector4f min = new Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
+        Vector4f max = new Vector4f(0.0f, 0.0f, 0.0f, 1.0f);
+
+        Collection<Model> models = scene.returnModelMap().values();
+        Matrix4f modelMatrix = new Matrix4f();
+        for (Model model : models) {
+            List<Entity> entities = model.getEntitiesList();
+            modelIds = model.getId();
+            for (Entity entity : entities) {
+                modelMatrix.translate(entity.returnPosition()).scale(entity.returnScale());
+                for (Material material : model.getMaterialList()) {
+                    for (Mesh mesh : material.getMeshList()) {
+                        //System.out.print(model.getId());
+                        Vector3f aabMin = mesh.getAabbMin();
+                        min.set(aabMin.x, aabMin.y, aabMin.z, 1.0f);
+                        min.mul(modelMatrix);
+                        Vector3f aabMax = mesh.getAabbMax();
+                        max.set(aabMax.x, aabMax.y, aabMax.z, 1.0f);
+                        max.mul(modelMatrix);
+                        MeshInfo.addMeshinfo(min, max, model.getId());
+                        //System.out.print(max);
+                        //System.out.print(min); 
+                        //append aabmin and aabmax to a Vector3f list with an identifier attached to them
+                        //create a function that accepts an identifier then searches the list and parses the aabmin and aabmax based on the provided identifier, finally it returns 2 different Vector3f variables of aabmin and aabmax
+                        Finalmin = new Vector3f(InMin.x, InMin.y, InMin.z);
+                        Finalmax = new Vector3f(InMax.x, InMax.y, InMax.z);
+
+                        if (Intersectionf.testAabAab(Finalmin, Finalmax, aabMin, aabMax)) { //this should be taking in min/max not aabmin/aabmax but min/max is vec4 im gonna kill muself
+                            System.out.print("it worked yay");
+                        } else {
+                            // System.out.println(
+                            //     "Finalmin: " + Finalmin +
+                            //     ", Finalmax: " + Finalmax +
+                            //     ", aabMin: " + aabMin +
+                            //     ", aabMax: " + aabMax);
+                        }
+                    }
+                }
+                modelMatrix.identity();
+            }
+        }
+
+        //scene.setSelectedEntity(selectedEntity);
+    }
+
+
     @Override
     public void init(Window window, Scene scene, Render render) {
         glfwSetInputMode(window.getWindowHandle(), GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
@@ -195,14 +284,19 @@ public class Main implements IAppLogic, IGuiInstance {
         terrainEntity.updateModelMatrix();
         scene.addEntity(terrainEntity);
 
-        Model cubeModel = ModelLoader.loadModel("cube-model", "resources/models/cube/cube.obj",
+        cubeModel = ModelLoader.loadModel("cube-model", "resources/models/cube/cube.obj",
         scene.getTextureCache(), false);
         scene.addModel(cubeModel);
+        cubeModelId = cubeModel.getId();
         cubeEntity1 = new Entity("cube-entity-1", cubeModel.getId());
         cubeEntity1.setPosition(0, 2, -1);
         scene.addEntity(cubeEntity1);
 
-        cubeEntity2 = new Entity("cube-entity-2", cubeModel.getId());
+
+        Model cubeModel2 = ModelLoader.loadModel("cube-model2", "resources/models/cube/cube.obj",
+        scene.getTextureCache(), false);
+        scene.addModel(cubeModel2);
+        cubeEntity2 = new Entity("cube-entity-2", cubeModel2.getId());
         cubeEntity2.setPosition(-2, 2, -1);
         scene.addEntity(cubeEntity2);
 
@@ -225,6 +319,8 @@ public class Main implements IAppLogic, IGuiInstance {
         // scene.addModel(rbModel);
         // rbEntity = new Entity("rb-model", rbModel.getId());
         // scene.addEntity(rbEntity);
+        // rbEntity.setPosition(0, -10, 0);
+        // bobEntity.updateModelMatrix();
 
 
         SceneLights sceneLights = new SceneLights();
@@ -252,7 +348,11 @@ public class Main implements IAppLogic, IGuiInstance {
 
         // PhysicsWorld physicsWorld = new PhysicsWorld();
         // physicsWorld.addBox(new javax.vecmath.Vector3f(0, 25, 0), new javax.vecmath.Vector3f(1, 1, 1));
+        
+        //System.out.print("MinX "+ ModelLoader.aabbMin.x + " MinY " + ModelLoader.aabbMin.y + " MinZ " + ModelLoader.aabbMin.z + " \n");
+        //System.out.print(" MaxX " + ModelLoader.aabbMax.x +" MaxY "+ ModelLoader.aabbMax.y +" MaxZ "+ ModelLoader.aabbMax.z + " \n");
 
+        defineMeshInfo(scene);
     }
 
     @Override
@@ -278,19 +378,30 @@ public class Main implements IAppLogic, IGuiInstance {
             camera.CamDown(move);
         }
         if (window.isKeyPressed(GLFW_KEY_LEFT)) {
+            cubepos1 = cubeEntity1.returnPosition();
+            cubeEntity1.setPosition(cubepos1.x - 0.1f, cubepos1.y, cubepos1.z);
+            cubeEntity1.updateModelMatrix();
+            info = MeshInfo.findMeshById(cubeModelId);
+            isColliding(scene, info.aabbMin, info.aabMax);
+
+        } else if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
+            cubepos1 = cubeEntity1.returnPosition();
+            cubeEntity1.setPosition(cubepos1.x + 0.1f, cubepos1.y, cubepos1.z);
+            cubeEntity1.updateModelMatrix();
+            
+        }
+        if (window.isKeyPressed(GLFW_KEY_Z)) {
             lightAngle -= 2.5f;
-            if (lightAngle < -90) {
+            if (lightAngle < -90) { 
                 lightAngle = 180;
             }
-        } else if (window.isKeyPressed(GLFW_KEY_RIGHT)) {
+        } else if (window.isKeyPressed(GLFW_KEY_C)) {
             lightAngle += 2.5f;
             if (lightAngle > 90) {
                 lightAngle = 90;
             }
         }
-
         soundMgr.updateListenerPosition(camera);
-
         MouseInput mouseInput = window.getMouseInput();
 
         if (mouseInput.isLeftButtonPressed()) {
@@ -298,10 +409,10 @@ public class Main implements IAppLogic, IGuiInstance {
         }
 
         //camera moving with mouse movement
-        if (mouseInput.isRightButtonPressed()) {
+        //if (mouseInput.isRightButtonPressed()) {
             Vector2f displVec = mouseInput.getDisplVec();
             camera.addRotation((float) Math.toRadians(displVec.x * MOUSE_SENSITIVITY), (float) Math.toRadians(displVec.y * MOUSE_SENSITIVITY));
-        }
+        //}
         SceneLights sceneLights = scene.getSceneLights();
         DirLight dirLight = sceneLights.getDirLight();
         double angRad = Math.toRadians(lightAngle);
@@ -322,12 +433,12 @@ public class Main implements IAppLogic, IGuiInstance {
 
         cubeEntity2.setRotation(1, 1, 1, (float) Math.toRadians(360 - rotation));
         cubeEntity2.updateModelMatrix();
-
-        animationData.nextFrame();
-        if (animationData.getCurrentFrameIdx() == 45) {
-            playerSoundSource.play();
+        if (animationData != null){
+            animationData.nextFrame();
+            if (animationData.getCurrentFrameIdx() == 45) {
+                playerSoundSource.play();
+            }
         }
-
         // for (int i = 0; i < 100; i++) {
         //     physicsWorld.stepSimulation(1.0f / 60.f);
         //     for (CollisionObject obj : physicsWorld.getCollisionObjects()) {
